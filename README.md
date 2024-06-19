@@ -61,3 +61,21 @@ Set-PSReadlineKeyHandler -Key Ctrl+r -ScriptBlock {
     }
 }
 ```
+
+# Usage
+
+```
+usage: xh [-h] [-c COMMAND] [-t TIMESTAMP] [-db DATABASE] [-m MIGRATE] [-u]
+
+options:
+  -h, --help            show this help message and exit
+  -c COMMAND, --command COMMAND
+                        The command to insert into the xh database.
+  -t TIMESTAMP, --timestamp TIMESTAMP
+                        The timestamp of the command in Unix milliseconds. If not provided the current time will be used.
+  -db DATABASE, --database DATABASE
+                        Filepath to the SQLite Database. Default `$HOME/.xhdb`.
+  -m MIGRATE, --migrate MIGRATE
+                        Migrate all commands from a history file to xh. E.g. xh -m (Get-PSReadlineOption).HistorySavePath
+  -u, --unique          Retrieve all unique commands from the database as a newline seperated list.
+```

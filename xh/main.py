@@ -10,23 +10,34 @@ from pathlib import Path
 def main() -> None:
     """Main entrypoint for CLI."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--command", help="The command to store", required=False)
+    parser.add_argument("-c", "--command", help="The command to insert into the xh database.", required=False)
     parser.add_argument(
         "-t",
         "--timestamp",
-        help="The timestamp of the command in Unix milliseconds",
+        help="The timestamp of the command in Unix milliseconds. If not provided the current time will be used.",
         required=False,
         default=int(time.time_ns() / 1_000_000),
     )
     parser.add_argument(
         "-db",
         "--database",
-        help="Filepath to the SQLite Database to store commands",
+        help="Filepath to the SQLite Database. Default `$HOME/.xhdb`.",
         required=False,
         default=str(Path(Path.home(), ".xhdb").absolute()),
     )
-    parser.add_argument("--migrate", required=False)
-    parser.add_argument("--unique", required=False, action="store_true")
+    parser.add_argument(
+        "-m",
+        "--migrate",
+        help="Migrate all commands from a history file to xh. E.g. xh -m (Get-PSReadlineOption).HistorySavePath",
+        required=False,
+    )
+    parser.add_argument(
+        "-u",
+        "--unique",
+        help="Retrieve all unique commands from the database as a newline seperated list.",
+        required=False,
+        action="store_true",
+    )
     args = parser.parse_args()
 
     db_folder = Path(args.database).parent
