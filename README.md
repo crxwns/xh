@@ -51,7 +51,7 @@ Use `xh` and `fzf` to get an interactive search through your history.
 Set-PSReadlineKeyHandler -Key Ctrl+r -ScriptBlock {
     $result = $null
     try {
-        xh --unique | fzf | ForEach-Object { $result = $_ }
+        $result = xh --unique | fzf
     }
     catch {
         # catch custom exception
