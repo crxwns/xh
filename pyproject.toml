@@ -1,0 +1,21 @@
+[tool.poetry]
+name = "xh"
+version = "0.1.0"
+description = ""
+authors = ["crxwns"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.12"
+
+[tool.ruff]
+line-length = 120
+select = ["ALL"]
+ignore = ["EM102", "EM101", "TRY003", "FA102", "D401"]
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry.scripts]
+xh = "xh.main:main"
