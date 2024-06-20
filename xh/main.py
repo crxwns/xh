@@ -5,6 +5,8 @@ import sqlite3
 import sys
 import time
 from pathlib import Path
+from types import TracebackType
+from typing import Self
 
 
 def main() -> None:
@@ -59,31 +61,36 @@ def main() -> None:
     if not db_folder.exists():
         raise AssertionError(f"Path doesn't exist: {db_folder}")
 
-    cursor, connection = initialize_db(database=args.database)
+    with SQLite(db_file_path=args.database) as database:
+        # TODO(crxwns): Sanitize input HERE before inserting
+        if args.command:
+            sanitize_command(args.command)
+            database.insert_command(command=args.command, timestamp=args.timestamp)
 
-    if args.command:
-        insert_command(cursor=cursor, command=args.command, timestamp=args.timestamp)
+        if args.migrate:
+            history_file = Path(args.migrate)
+            if not history_file.exists():
+                raise AssertionError(f"File doesn't exist: {history_file}")
 
-    if args.migrate:
-        history_file = Path(args.migrate)
-        if not history_file.exists():
-            raise AssertionError(f"File doesn't exist: {history_file}")
+            with history_file.open() as history:
+                for line in history:
+                    sanitize_command(line)
+                    database.insert_command(command=line, timestamp=args.timestamp)
 
-        with history_file.open() as history:
-            for line in history:
-                insert_command(cursor=cursor, command=line, timestamp=args.timestamp)
+        if args.unique:
+            commands = database.get_all_unique_commands()
+            # TODO(crxwns): transform output
+            sys.stdout.write("\n".join(commands))
 
-    if args.unique:
-        commands = get_all_unique_commands(cursor=cursor)
-        sys.stdout.write("\n".join(commands))
+        if args.topten:
+            if not isinstance(args.topten, int):
+                raise TypeError("Topten needs to be an Integer.")
+            commands = database.get_top_commands(number=args.topten)
+            # TODO(crxwns): Format to print
+            sys.stdout.write(commands)
 
-    if args.topten:
-        if not isinstance(args.topten, int):
-            raise TypeError("Topten needs to be an Integer.")
-        sys.stdout.write(get_top_commands(cursor=cursor, number=args.topten))
 
-    connection.commit()
-    connection.close()
+def sanitize_command(command: str) -> str: ...
 
 
 def insert_command(cursor: sqlite3.Cursor, command: str, timestamp: int) -> None:
@@ -142,6 +149,65 @@ def get_top_commands(cursor: sqlite3.Cursor, number: int) -> str:
     )
     result: list[tuple[str, int]] = cursor.fetchall()
     return "\n".join([f"{idx + 1}.\t{count}\t{command}" for idx, (count, command) in enumerate(result)])
+
+
+class SQLite:
+    """Implements SQLite Interface."""
+
+    def __init__(self, db_file_path: Path) -> None:
+        """Initalize SQLite Database."""
+        self._connection: sqlite3.Connection = sqlite3.connect(db_file_path)
+        self._cursor: sqlite3.Cursor = self._connection.cursor()
+        self._cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS commands(
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                command TEXT,
+                timestamp_ms INTEGER
+            )""",
+        )
+
+    def __enter__(self) -> Self:
+        return self
+
+    def __exit__(
+        self, exc_type: type[BaseException] | None, exc_value: BaseException | None, exc_traceback: TracebackType | None
+    ) -> None:
+        self.close()
+
+    def close(self) -> None:
+        self._connection.commit()
+        self._connection.close()
+
+    def get_top_commands(self, number: int) -> list[tuple[int, str]]:
+        """Get the top X commands by number of calls."""
+        self._cursor.execute(
+            """
+            SELECT count(command),
+                TRIM(command, '\n')
+            FROM commands
+            GROUP by command
+            ORDER by count(command) DESC
+            LIMIT ?
+            """,
+            (number,),
+        )
+        return self._cursor.fetchall()
+
+    def get_all_unique_commands(self) -> list[tuple[str]]:
+        """Gets all unique commands."""
+        self._cursor.execute("SELECT DISTINCT(TRIM(LTRIM(command))) FROM commands")
+        return self._cursor.fetchall()
+
+    def insert_command(self, command: str, timestamp: int) -> None:
+        """Insert a command into the Database."""
+        self._cursor.execute(
+            """
+            INSERT INTO commands (command, timestamp_ms)
+            VALUES (?, ?)
+            """,
+            (command, timestamp),
+        )
 
 
 if __name__ == "__main__":
