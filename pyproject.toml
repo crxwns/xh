@@ -11,7 +11,7 @@ python = "^3.11"
 [tool.ruff]
 line-length = 120
 select = ["ALL"]
-ignore = ["EM102", "EM101", "TRY003", "FA102", "D401"]
+ignore = ["EM102", "EM101", "TRY003", "FA102", "FA100", "D401", "TD003"]
 
 [build-system]
 requires = ["poetry-core"]

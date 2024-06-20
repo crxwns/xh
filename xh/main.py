@@ -10,7 +10,12 @@ from pathlib import Path
 def main() -> None:
     """Main entrypoint for CLI."""
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--command", help="The command to insert into the xh database.", required=False)
+    parser.add_argument(
+        "-c",
+        "--command",
+        help="Add a command to the database of xh. If no timestamp is provided, the current time will be used.",
+        required=False,
+    )
     parser.add_argument(
         "-t",
         "--timestamp",
@@ -117,11 +122,13 @@ def initialize_db(database: str) -> tuple[sqlite3.Cursor, sqlite3.Connection]:
 def get_all_unique_commands(cursor: sqlite3.Cursor) -> list[str]:
     """Collect all unique Commands from Database."""
     commands: list[tuple[str]] = cursor.execute("SELECT DISTINCT(TRIM(LTRIM(command))) FROM commands").fetchall()
+    # TODO(crxwns): Strip shouldn't be necessary here
     return [command[0].strip().lstrip() for command in commands if command]
 
 
 def get_top_commands(cursor: sqlite3.Cursor, number: int) -> str:
     """Retrieve top ten commands from Database."""
+    # TODO(crxwns): Too many responsibilites
     cursor.execute(
         """
         SELECT count(command),
@@ -131,10 +138,10 @@ def get_top_commands(cursor: sqlite3.Cursor, number: int) -> str:
         ORDER by count(command) DESC
         LIMIT ?
         """,
-        [number],
+        (number,),
     )
     result: list[tuple[str, int]] = cursor.fetchall()
-    return "\n".join([f"{count} - {command}" for (count, command) in result])
+    return "\n".join([f"{idx + 1}.\t{count}\t{command}" for idx, (count, command) in enumerate(result)])
 
 
 if __name__ == "__main__":

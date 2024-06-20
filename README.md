@@ -2,6 +2,24 @@
 
 Small Python tool to grab all executed commands, add them to a SQLite Database (Default DB file $HOME/.xhdb) and read all commands.
 
+# TODO
+
+- [ ] Input sanitization
+  - [ ] Remove leading and trailing whitespaces and newlines during insertion
+- [ ] Add the possibility to ignore commands like `cd` and `ls`
+  - [ ] Maybe with configfile or by passing in a list of ignored commands?
+- [ ] Rethink DB Schema
+  - [ ] Split Command to multiple columns <command> <arguments> <fullcommand>
+- [ ] Run `xh` in the Background to not block the execution of commands in Powershell
+- [ ] Prebuilt the package and look for a good way of distributing
+- [ ] Evaluate Click to replace argparse
+- [ ] Evaluate Rich for a TUI
+  - [ ] Create a Heatmap of commands used per day
+- [ ] Evaluate the usage of an ORM + Migrations
+- [ ] Try integration with bash
+- [ ] Build a prototype in rust and compare performance
+  - [ ] If everything is just IO bound theres no need to switch lanuages i guess
+
 # Installation
 
 ## Build
