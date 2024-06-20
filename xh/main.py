@@ -38,6 +38,16 @@ def main() -> None:
         required=False,
         action="store_true",
     )
+    parser.add_argument(
+        "-top",
+        "--topten",
+        help="Get a list of the top X commands used.",
+        required=False,
+        nargs="?",
+        type=int,
+        const=10,
+    )
+
     args = parser.parse_args()
 
     db_folder = Path(args.database).parent
@@ -62,6 +72,11 @@ def main() -> None:
         commands = get_all_unique_commands(cursor=cursor)
         sys.stdout.write("\n".join(commands))
 
+    if args.topten:
+        if not isinstance(args.topten, int):
+            raise TypeError("Topten needs to be an Integer.")
+        sys.stdout.write(get_top_commands(cursor=cursor, number=args.topten))
+
     connection.commit()
     connection.close()
 
@@ -76,7 +91,10 @@ def insert_command(cursor: sqlite3.Cursor, command: str, timestamp: int) -> None
     stripped_command = command.lstrip().rstrip()
 
     cursor.execute(
-        "INSERT INTO commands (command, timestamp_ms) VALUES (?, ?)",
+        """
+        INSERT INTO commands (command, timestamp_ms)
+        VALUES (?, ?)
+        """,
         (stripped_command, timestamp),
     )
 
@@ -86,7 +104,12 @@ def initialize_db(database: str) -> tuple[sqlite3.Cursor, sqlite3.Connection]:
     connection: sqlite3.Connection = sqlite3.connect(database)
     cursor: sqlite3.Cursor = connection.cursor()
     cursor.execute(
-        "CREATE TABLE IF NOT EXISTS commands(id INTEGER PRIMARY KEY AUTOINCREMENT, command TEXT, timestamp_ms INTEGER)",
+        """
+        CREATE TABLE IF NOT EXISTS commands(
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            command TEXT,
+            timestamp_ms INTEGER
+        )""",
     )
     return cursor, connection
 
@@ -95,6 +118,23 @@ def get_all_unique_commands(cursor: sqlite3.Cursor) -> list[str]:
     """Collect all unique Commands from Database."""
     commands: list[tuple[str]] = cursor.execute("SELECT DISTINCT(TRIM(LTRIM(command))) FROM commands").fetchall()
     return [command[0].strip().lstrip() for command in commands if command]
+
+
+def get_top_commands(cursor: sqlite3.Cursor, number: int) -> str:
+    """Retrieve top ten commands from Database."""
+    cursor.execute(
+        """
+        SELECT count(command),
+            TRIM(command, '\n')
+        FROM commands
+        GROUP by command
+        ORDER by count(command) DESC
+        LIMIT ?
+        """,
+        [number],
+    )
+    result: list[tuple[str, int]] = cursor.fetchall()
+    return "\n".join([f"{count} - {command}" for (count, command) in result])
 
 
 if __name__ == "__main__":

@@ -6,7 +6,7 @@ authors = ["crxwns"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = "^3.11"
 
 [tool.ruff]
 line-length = 120
