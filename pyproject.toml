@@ -8,6 +8,9 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11"
 
+[tool.poetry.group.test.dependencies]
+pytest = "^8.2.2"
+
 [tool.ruff]
 line-length = 120
 select = ["ALL"]
