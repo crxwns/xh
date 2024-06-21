@@ -5,7 +5,7 @@ import sys
 import time
 from pathlib import Path
 
-from xh.commands import get_all_unique_commands, get_top_commands, insert_command, sanitize_command
+from xh.commands import get_top_number_commands, get_unique_commands, insert_command_into_database, sanitize_command
 from xh.interfaces.sqlite_interface import SQLiteInterface
 
 
@@ -64,16 +64,16 @@ def main() -> None:
     with SQLiteInterface(db_file_path=Path(args.database)) as database:
         if args.command:
             command = sanitize_command(args.command)
-            insert_command(database=database, command=command, timestamp=args.timestamp)
+            insert_command_into_database(database=database, command=command, timestamp=args.timestamp)
 
         if args.unique:
-            commands = get_all_unique_commands(database=database)
+            commands = get_unique_commands(database=database)
             sys.stdout.write("\n".join(commands))
 
         if args.topten:
             if not isinstance(args.topten, int):
                 raise TypeError("Topten needs to be an Integer.")
-            commands = get_top_commands(database=database, number=args.topten)
+            commands = get_top_number_commands(database=database, number=args.topten)
             sys.stdout.write(commands)
 
         if args.migrate:
@@ -84,4 +84,4 @@ def main() -> None:
             with history_file.open() as history:
                 for line in history:
                     sanitize_command(line)
-                    database.insert_command(command=line, timestamp=args.timestamp)
+                    insert_command_into_database(database=database, command=line, timestamp=args.timestamp)

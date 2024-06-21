@@ -6,7 +6,7 @@ from typing import Generator
 
 import pytest
 
-from xh.commands import get_all_unique_commands, get_top_commands, insert_command
+from xh.commands import get_top_number_commands, get_unique_commands, insert_command_into_database
 from xh.interfaces.file_interface import FileInterface
 
 filedb = Path(Path(__file__).parent, "filedb")
@@ -27,7 +27,7 @@ def test_file_interface() -> None:
         timestamp = int(time.time_ns() / 1_000_000)
         command = "cd"
 
-        insert_command(database=fi, command=command, timestamp=timestamp)
+        insert_command_into_database(database=fi, command=command, timestamp=timestamp)
 
         commands = fi.get_all_unique_commands()
 
@@ -39,11 +39,11 @@ def test_unique() -> None:
     length = 3
 
     with FileInterface(filedb) as fi:
-        insert_command(fi, "cd", 100)
-        insert_command(fi, "ls", 100)
-        insert_command(fi, "cat", 100)
+        insert_command_into_database(fi, "cd", 100)
+        insert_command_into_database(fi, "ls", 100)
+        insert_command_into_database(fi, "cat", 100)
 
-        unique = get_all_unique_commands(fi)
+        unique = get_unique_commands(fi)
 
         assert len(unique) == length
         assert "cd" in unique
@@ -56,7 +56,7 @@ def test_count() -> None:
     with FileInterface(filedb) as fi:
         count = 6
         for i in range(count):
-            insert_command(fi, "cd", 100)
+            insert_command_into_database(fi, "cd", 100)
 
-        top = get_top_commands(fi, 1)
+        top = get_top_number_commands(fi, 1)
         assert top == "1.\t6\tcd"
