@@ -21,7 +21,7 @@ def get_unique_commands(database: DBInterface) -> list[str]:
     return commands
 
 
-def get_top_number_commands(database: DBInterface, number: int) -> str:
+def get_top_number_commands(database: DBInterface, number: int) -> list[str]:
     """Retrieve top ten commands from Database."""
     commands = database.get_top_commands(number=number)
-    return "\n".join([f"{idx + 1}.\t{count}\t{command}" for idx, (count, command) in enumerate(commands)])
+    return [f"{idx + 1}.\t{count}\t{command}" for idx, (count, command) in enumerate(commands)]

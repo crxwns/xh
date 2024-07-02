@@ -74,7 +74,7 @@ def main() -> None:
             if not isinstance(args.topten, int):
                 raise TypeError("Topten needs to be an Integer.")
             commands = get_top_number_commands(database=database, number=args.topten)
-            sys.stdout.write(commands)
+            sys.stdout.write("\n".join(commands))
 
         if args.migrate:
             history_file = Path(args.migrate)
